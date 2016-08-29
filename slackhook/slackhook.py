@@ -6,44 +6,53 @@ from urllib.request import urlopen, Request
 
 
 class Slack:
-    def __init__(self, url, token, channel):
+    """ Holds url, token, channel and optionally username or icon_url for ease
+    of messaging on slack.
+    """
+    def __init__(self, url, token, channel, username=None, icon_url=None):
         self.url = url
         self.token = token
         self.channel = channel
+        if username:
+            self.username = username
+        if icon_url:
+            self.icon_url = icon_url
 
-    def build_request(self, info):
-        """
-        Takes the dict `info` and turns it into a json dump. Uploads with
-        requests module, and returns the response.
-        """
-        params = json.dumps(info).encode('utf8')
-        req = Request(
-                      self.url,
-                      data=params,
-                      headers={'content-type': 'application/json'},
-                     )
-        return req
+    def assemble_url(self, info_json):
+        """ Using urllib.request.Request, create a url to open """
+        return Request(self.url, data=info_json,
+                       headers={'content-type': 'application/json'})
 
-    def send_message(self, text, username, icon_url, attachments=None):
-        """ text and username should not be None, but icon_url may be None. """
+    def send_message(self, text, username=self.username,
+                     icon_url=self.icon_url, attachments=None):
+        """ Send a message to slack """
+        # Create the data that will be used in the message
         info = {
+            # From args
             "text": text,
+            # From args or class
+            "username": username,
+            # From class
             "token": self.token,
             "channel": self.channel,
-            "username": username,
         }
         if icon_url:
             info['icon_url'] = icon_url
         if attachments:
             info['attachments'] = attachments
-        req = self.build_request(info)
-        response = urlopen(req)
-        return response
+
+        # Encode the data, create a url, open it, and return the raw response
+        return urlopen(assemble_url(encode_data(info)))
+
+
+def encode_data(d):
+    """ Takes a dictionary and returns a utf8 encoded json string. """
+    return json.dumps(d).encode('utf8')
 
 
 def main():
     """ Creates a one shot message to slack. """
-    parser = argparse.ArgumentParser(description='Message slack.')
+    parser = argparse.ArgumentParser(description='Create a one shot message to slack.')
     parser.add_argument('token', metavar='TOKEN', help='your private token')
     parser.add_argument('channel', metavar='CHANNEL', help='channel to '
                         'message.')
@@ -54,6 +63,8 @@ def main():
     parser.add_argument('--icon_url', metavar="URL", help="optional url to "
                         "an image that is used as the icon")
     args = parser.parse_args()
+
+    # Initialize the slack object and print the response from the message
     s = Slack(args.url, args.token, args.channel)
     resp = s.send_message(args.text, args.username, args.icon_url)
     print(resp.read().decode('utf8'))
