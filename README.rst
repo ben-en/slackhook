@@ -42,3 +42,4 @@ Planned Features
 - Cleaner code
 - Inline documentation
 - A more intuitive set of arguments
+- Tests
