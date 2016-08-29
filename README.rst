@@ -27,3 +27,18 @@ General usage can be found with the -h flag::
 Example usage::
 
     slackhook --username ben.ennis ABC23478DEF82 #general <slack url> "My Message"
+
+Current Features
+================
+
+Can be used to 1) message users/channels from the command line, 2) message 
+users/channels from python programs, or 3) log a given set of messages to a 
+user/channel with the standard library logger.
+
+Planned Features
+================
+
+- Useful documentation
+- Cleaner code
+- Inline documentation
+- A more intuitive set of arguments
